@@ -28,7 +28,7 @@ wasmInstance.then(instance => {
   console.log(bufferPtr);
   console.log(opMatrixPtr);
   console.log(resPtr);
-  var bufferLength = 16384;
+  var bufferLength = 1024;
   var buffer = new Float32Array(imports.env.memory.buffer, bufferPtr, bufferLength);
   var opMatrix = new Float32Array(imports.env.memory.buffer, opMatrixPtr, 16);
   for (var i = 0; i < buffer.length; i++) {
@@ -36,7 +36,8 @@ wasmInstance.then(instance => {
     opMatrix[i] = i;
   }
   var t0 = performance.now();
-  var resLength = instance.exports.__Z6matMuliii(0, bufferLength, 16);
+  for (var i = 0;i < 100;++ i)
+    var resLength = instance.exports.__Z6matMuliii(0, bufferLength, 16);
   var t1 = performance.now();
   var res = new Float32Array(imports.env.memory.buffer, resPtr, resLength);
   console.log("Call to doSomething took " + (t1 - t0) + " milliseconds.");
