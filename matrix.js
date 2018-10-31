@@ -4,6 +4,7 @@ function loadWebAssembly(filename, imports) {
   imports.env.memoryBase = imports.env.memoryBase || 0;
   imports.env.tableBase = imports.env.tableBase || 0;
   if (!imports.env.memory) {
+    // the number of pages, 64K per page
     imports.env.memory = new WebAssembly.Memory({ initial: 256 });
   }
   if (!imports.env.table) {
@@ -20,14 +21,14 @@ function loadWebAssembly(filename, imports) {
 
 var [wasmInstance, imports] = loadWebAssembly("./matrix.wasm");
 wasmInstance.then(instance => {
+  console.log(instance.exports);
   var offset = instance.exports.__Z9getBufferv();
-  // create a view on the memory that points to this array
+  var offset2 = instance.exports.__Z11getOpMatrixv();
   var linearMemory = new Uint32Array(imports.env.memory.buffer, offset, 100);
-  // populate with some data
+  var linearMemory2 = new Uint32Array(imports.env.memory.buffer, offset2, 100);
   for (var i = 0; i < linearMemory.length; i++) {
-    linearMemory[i] = i;
+    linearMemory2[i] = i;
   }
-  // mutate the array within the WebAssembly module
   instance.exports.__Z6matrixv();
-  console.log(linearMemory);
+  console.log(linearMemory2);
 })
