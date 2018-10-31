@@ -21,14 +21,26 @@ function loadWebAssembly(filename, imports) {
 
 var [wasmInstance, imports] = loadWebAssembly("./matrix.wasm");
 wasmInstance.then(instance => {
+  var bufferPtr = instance.exports.__Z12getBufferPtrv();
+  var opMatrixPtr = instance.exports.__Z14getOpMatrixPtrv();
+  var resPtr = instance.exports.__Z9getResPtrv()
   console.log(instance.exports);
-  var offset = instance.exports.__Z9getBufferv();
-  var offset2 = instance.exports.__Z11getOpMatrixv();
-  var linearMemory = new Uint32Array(imports.env.memory.buffer, offset, 100);
-  var linearMemory2 = new Uint32Array(imports.env.memory.buffer, offset2, 100);
-  for (var i = 0; i < linearMemory.length; i++) {
-    linearMemory2[i] = i;
+  console.log(bufferPtr);
+  console.log(opMatrixPtr);
+  console.log(resPtr);
+  var bufferLength = 16384;
+  var buffer = new Float32Array(imports.env.memory.buffer, bufferPtr, bufferLength);
+  var opMatrix = new Float32Array(imports.env.memory.buffer, opMatrixPtr, 16);
+  for (var i = 0; i < buffer.length; i++) {
+    buffer[i] = i;
+    opMatrix[i] = i;
   }
-  instance.exports.__Z6matrixv();
-  console.log(linearMemory2);
-})
+  var t0 = performance.now();
+  var resLength = instance.exports.__Z6matMuliii(0, bufferLength, 16);
+  var t1 = performance.now();
+  var res = new Float32Array(imports.env.memory.buffer, resPtr, resLength);
+  console.log("Call to doSomething took " + (t1 - t0) + " milliseconds.");
+  console.log('buffer', buffer);
+  console.log('opMatrix', opMatrix);
+  console.log('res', res);
+});

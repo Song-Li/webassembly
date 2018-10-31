@@ -2,17 +2,19 @@
 const int SIZE = 65535;
 float buffer[SIZE], opMatrix[16], res[SIZE];
 
-void matMulVec(const int matID, const int matSize, const int opSize) {
+int matMulVec(const int matID, const int matSize, const int opSize) {
   /**
    * handle mat mul vector
    * only support length of 3 and 4 for efficiency
    * other length can also be supported but maybe not efficient
    */
-  for (int cnt = 0, i = 0;i < matSize;) {
+  int cnt = 0;
+  for (int i = 0;i < matSize;) {
     for (int j = 0;j < opSize;++ j, ++ i) 
       res[cnt] += buffer[i] * opMatrix[j];
     ++ cnt;
   }
+  return cnt;
 }
 
 void trans(float* matrix, const int len) {
@@ -29,7 +31,7 @@ void trans(float* matrix, const int len) {
   }
 }
 
-void matMulMat(const int matID, const int matSize, const int opSize) {
+int matMulMat(const int matID, const int matSize, const int opSize) {
   /**
    * handle mat mul mat
    * only support length of 9 and 16
@@ -41,32 +43,37 @@ void matMulMat(const int matID, const int matSize, const int opSize) {
     opPtr = 0;
     int cur_ptr = i * len;
     for (int j = 0;j < len;++ j) {
+      res[cnt] = 0;
       for (int k = 0;k < len;++ k) 
         res[cnt] += buffer[cur_ptr + k] * opMatrix[opPtr ++] ;
       ++ cnt;
     }
   }
+  return cnt;
 }
 
-float* matMul(const int matID, const int matSize, const int opSize) {
+int matMul(const int matID, const int matSize, const int opSize) {
   /**
    * handle all the mat Mul functions
    * give task to subfunctions based on opSize
    * the mul is the result of buffer ID and opMatrix
    * return the mul result
    */
-  if (9 == opSize || 16 == opSize) matMulMat(matID, matSize, opSize);
-  else matMulVec(matID, matSize, opSize);
+  if (9 == opSize || 16 == opSize) return matMulMat(matID, matSize, opSize);
+  return matMulVec(matID, matSize, opSize);
 }
 
-float* getBuffer() {
+float* getBufferPtr() {
   return (&buffer[0]);
 }
-float* getOpMatrix() {
+float* getOpMatrixPtr() {
   return (&opMatrix[0]);
 }
+float* getResPtr() {
+  return (&res[0]);
+} 
 
 int main() {
-  matMulMat(0, 32, 16);
+  matMulMat(0, 30, 9);
   return 0;
 }
