@@ -34,7 +34,7 @@ void matMulMat(const int matID, const int matSize, const int opSize) {
    * handle mat mul mat
    * only support length of 9 and 16
    */
-  int len = 3 ? 4 : opSize == 9;
+  int len = opSize == 9 ? 3 : 4;
   int blockSize = matSize / len, opPtr, cnt = 0;
   trans(opMatrix, len);
   for (int i = 0;i < blockSize;++ i) {
