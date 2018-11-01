@@ -4,7 +4,7 @@ class MatrixCalculator {
    * @param 
    */
 
-  constructor(filename, imports) {
+  constructor(filename, callBackFunc, imports) {
     // the bufferMap is used to store the matID and bufferMap
     this.bufferMap = {};
 
@@ -14,7 +14,7 @@ class MatrixCalculator {
     imports.env.tableBase = imports.env.tableBase || 0;
     if (!imports.env.memory) {
       // the number of pages, 64K per page
-      imports.env.memory = new WebAssembly.Memory({ initial: 256 });
+      imports.env.memory = new WebAssembly.Memory({ initial: 512 });
     }
     if (!imports.env.table) {
       imports.env.table = new WebAssembly.Table({ initial: 0, 
@@ -22,7 +22,7 @@ class MatrixCalculator {
     }
 
     this.imports = imports;
-    this.SIZE = 65535;
+    this.SIZE = 65536;
     this.instance = null;
     var wasmInstance = this.loadWebAssembly(filename, imports);
     wasmInstance.then(instance => {this.instance = instance;
@@ -30,7 +30,7 @@ class MatrixCalculator {
       this.opMatrix = new Float32Array(this.imports.env.memory.buffer, this.opMatrixPtr, 16);
       this.resPtr = instance.exports.__Z9getResPtrv();
       this.res = new Float32Array(this.imports.env.memory.buffer, this.resPtr, this.SIZE);
-      runCal()});
+      callBackFunc()});
   }
 
   loadWebAssembly(filename, imports) {
@@ -44,28 +44,27 @@ class MatrixCalculator {
 
   loadMatrix(matID, matVal) {
     var matLength = matVal.length;
+    console.log(this.instance);
     var bufferPtr = this.instance.exports.__Z10loadMatrixii(matID, matLength);
+    console.log(this.instance);
     this.bufferMap[matID] = new Float32Array(this.imports.env.memory.buffer, bufferPtr, matLength);
     this.bufferMap[matID].set(matVal);
   }
-
 
   doMatMul(matID, opMatrix) {
     this.opMatrix.set(opMatrix); 
     var resLength = this.instance.exports.__Z6matMuliii(matID, this.bufferMap[matID].length, opMatrix.length);
     return resLength;
   }
-
 }
 
-var matrixCalculator = new MatrixCalculator('./matrix.wasm'); 
+var matrixCalculator = new MatrixCalculator('./matrix.wasm', runCal); 
 
 function runCal() {
   var instance = matrixCalculator.instance;
   var imports = matrixCalculator.imports;
-  var t0 = performance.now();
   var mat1 = [];
-  for (var i = 0;i < 40000;++ i) mat1.push(i);
+  for (var i = 0;i < 65536;++ i) mat1.push(i);
   var mat2 = [];
   for (var i = 0;i < 30;++ i) mat2.push(i);
 
@@ -75,6 +74,7 @@ function runCal() {
   var opMatrix = [];
   for (var i = 0;i < 16;++ i) opMatrix.push(i);
 
+  var t0 = performance.now();
   var resLength = matrixCalculator.doMatMul(0, opMatrix);
 
   var t1 = performance.now();

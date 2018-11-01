@@ -1,7 +1,6 @@
-#include <stdio.h>
-const int SIZE = 65535;
+const int SIZE = 2097152;
 float buffer[SIZE], opMatrix[16], res[SIZE];
-int offset[SIZE], curSIZE = 0;
+int offset[1024], curSIZE = 0;
 
 int matMulVec(const int matID, const int matSize, const int opSize) {
   /**
