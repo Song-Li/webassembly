@@ -1,6 +1,7 @@
 #include <stdio.h>
 const int SIZE = 65535;
 float buffer[SIZE], opMatrix[16], res[SIZE];
+int offset[SIZE], curSIZE = 0;
 
 int matMulVec(const int matID, const int matSize, const int opSize) {
   /**
@@ -8,10 +9,11 @@ int matMulVec(const int matID, const int matSize, const int opSize) {
    * only support length of 3 and 4 for efficiency
    * other length can also be supported but maybe not efficient
    */
+  float* cur_buffer = buffer + offset[matID];
   int cnt = 0;
   for (int i = 0;i < matSize;) {
     for (int j = 0;j < opSize;++ j, ++ i) 
-      res[cnt] += buffer[i] * opMatrix[j];
+      res[cnt] += cur_buffer[i] * opMatrix[j];
     ++ cnt;
   }
   return cnt;
@@ -36,6 +38,7 @@ int matMulMat(const int matID, const int matSize, const int opSize) {
    * handle mat mul mat
    * only support length of 9 and 16
    */
+  float* cur_buffer = buffer + offset[matID];
   int len = opSize == 9 ? 3 : 4;
   int blockSize = matSize / len, opPtr, cnt = 0;
   trans(opMatrix, len);
@@ -45,7 +48,7 @@ int matMulMat(const int matID, const int matSize, const int opSize) {
     for (int j = 0;j < len;++ j) {
       res[cnt] = 0;
       for (int k = 0;k < len;++ k) 
-        res[cnt] += buffer[cur_ptr + k] * opMatrix[opPtr ++] ;
+        res[cnt] += cur_buffer[cur_ptr + k] * opMatrix[opPtr ++] ;
       ++ cnt;
     }
   }
@@ -61,6 +64,12 @@ int matMul(const int matID, const int matSize, const int opSize) {
    */
   if (9 == opSize || 16 == opSize) return matMulMat(matID, matSize, opSize);
   return matMulVec(matID, matSize, opSize);
+}
+
+float* loadMatrix(const int matID, const int length) {
+  offset[matID] = curSIZE;
+  curSIZE += length;
+  return (&buffer[offset[matID]]);
 }
 
 float* getBufferPtr() {
