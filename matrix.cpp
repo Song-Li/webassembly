@@ -2,6 +2,10 @@ const int SIZE = 2097152;
 float buffer[SIZE], opMatrix[16], res[SIZE];
 int offset[1024], curSIZE = 0;
 
+void clearBuffer() {
+  curSIZE = 0;
+}
+
 int matMulVec(const int matID, const int matSize, const int opSize) {
   /**
    * handle mat mul vector

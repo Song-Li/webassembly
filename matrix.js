@@ -34,6 +34,9 @@ class MatrixCalculator {
   }
 
   loadWebAssembly(filename, imports) {
+    /**
+     * load a webassembly file and return a promise
+     */
     return fetch(filename)
       .then(response => response.arrayBuffer())
       .then(buffer => WebAssembly.compile(buffer))
@@ -43,18 +46,32 @@ class MatrixCalculator {
   }
 
   loadMatrix(matID, matVal) {
+    /**
+     * load a matrix with a matID
+     * the array will be loaded to bufferMap
+     */
     var matLength = matVal.length;
-    console.log(this.instance);
     var bufferPtr = this.instance.exports.__Z10loadMatrixii(matID, matLength);
-    console.log(this.instance);
     this.bufferMap[matID] = new Float32Array(this.imports.env.memory.buffer, bufferPtr, matLength);
     this.bufferMap[matID].set(matVal);
   }
 
   doMatMul(matID, opMatrix) {
+    /**
+     * input the matID of the array and the matrix
+     * return the length of the result
+     */
     this.opMatrix.set(opMatrix); 
     var resLength = this.instance.exports.__Z6matMuliii(matID, this.bufferMap[matID].length, opMatrix.length);
     return resLength;
+  }
+
+  clearBuffer() {
+    /**
+     * clear the buffer of this instance
+     */
+    this.bufferMap = {};
+    this.instance.exports.__Z11clearBufferv();
   }
 }
 
@@ -84,5 +101,25 @@ function runCal() {
   var opMatrix = [];
   for (var i = 0;i < 9;++ i) opMatrix.push(i);
   var resLength = matrixCalculator.doMatMul(1, opMatrix);
+  console.log('res', matrixCalculator.res);
+
+  matrixCalculator.clearBuffer();
+  var mat1 = [];
+  var mat2 = [];
+  for (var i = 0;i < 65536;++ i) mat2.push(i + 3);
+  for (var i = 0;i < 32;++ i) mat1.push(i + 4.1);
+
+  matrixCalculator.loadMatrix(0, mat1);
+
+  var opMatrix = [];
+  for (var i = 0;i < 16;++ i) opMatrix.push(i);
+
+  var t0 = performance.now();
+  console.log(matrixCalculator.bufferMap[0]);
+  var resLength = matrixCalculator.doMatMul(0, opMatrix);
+  console.log(resLength);
+
+  var t1 = performance.now();
+  console.log('time in ms: ', t1 - t0);
   console.log('res', matrixCalculator.res);
 }
